@@ -1,0 +1,9 @@
+New setup:
+Auto-generate training set will be seperate from the labelled mechanism
+	One function to pick random images
+		Save the images to a given path
+			With the new training directory format
+	Setup the training parameters that will be used
+	The function to generateTrainingImages()
+		Take previous_training_dir and training_dir
+			Creates new manually labelled training images

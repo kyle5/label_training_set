@@ -1,0 +1,44 @@
+% function [] = selectAndSaveTrainingImages( local_parameters, calibration_classify_set )
+%
+% Loads parameters from text file and pass them to runDataset to execute.
+%
+% Parameters could define a single dataset, a set of datasets and/or a set of different parameters.
+%
+%   Arguments:
+%
+%     * [local_parameters] File that defines the repository, data directory, results directory, and the running parameters
+%			* [calibration_classify_set] Path to the directory to sample training images from, example /datum/yieldest/datasets/petite_syrah/rows/row_100/cam0_images/
+%
+%   Returns:
+%
+%     * nothing
+
+%%
+
+function labelTrainingImages( training_dir, prior_training_dir, split_rows, split_cols )
+	%loadTrainingImages
+		% Perhaps get the features from all of the training images
+	if (prior_training_dir ~= -1)
+		% Get features
+		% Build KD Forest -> cur_kd_forest
+	end
+	current_parameters = load_current_parameters();
+	for i = 1:size() %training_images)
+		% Obtain the current image
+		raw_image
+		if ( exist( cur_kd_forest ) )
+			raw_image
+				% Get features for the image
+			initial_detections = classifyOneImage(  );
+			% Label image with the initial detections
+				% uncorrected_img = ;
+		else
+			% Use the raw image to manually select centers
+				uncorrected_img = raw_img;
+		end
+		% labelGUI();
+			% Get manually labelled image
+		% Save the manually labelled image
+		% Build a new kd-tree using all of the manually labelled images
+	end
+end

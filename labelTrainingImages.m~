@@ -1,0 +1,59 @@
+% function [] = labelTrainingImages( training_dir, prior_training_dir, split_rows, split_cols )
+%
+% Loads parameters from text file and pass them to runDataset to execute.
+%
+% Parameters could define a single dataset, a set of datasets and/or a set of different parameters.
+%
+%   Arguments:
+%
+%     * [local_parameters] Filepath to file that defines the repository, data directory, results directory, and the running parameters
+%     * [training_dir] path to the new raw training images
+%			* [prior_training_dir] path to a previously completed dataset directory with a full training set
+%			* [split_rows] number of rows to split images into for labelGUI()
+%			* [split_cols] number of cols to split images into for labelGUI()
+%
+%   Returns:
+%
+%     * nothing
+
+%%
+
+function labelTrainingImages( local_parameters, training_dir, prior_training_dir, split_rows, split_cols )
+	%loadTrainingImages
+	all_training_images = load_all_training_images( training_dir );
+	% get the features from all of the training images?
+	if (prior_training_dir ~= -1)
+		% Get features
+		% Build KD Forest -> cur_kd_forest
+
+		dataset_path = ;
+		calibration_train_sets = ;
+		parameters_classify_set = ;
+		[classifyParams] = getClassificationParamsTrainingSet(dataset_path, calibration_train_sets, parameters_classify_set)
+	end
+	current_parameters = load_current_parameters();
+	for i = 1:size() %training_images)
+		% Obtain the current image
+		raw_image = all_training_images(i);
+		if ( exist( cur_kd_forest ) )
+			% Get features for the image
+			% Needs to have the whole setup of combinedFeatureExtractionMex(), etc....
+			featureDescriptors = ;
+			out = i;
+			parameters = loadParameters(  );
+			% All of the features for a training set and their labels are passed into classifyOneImage()
+				% There are no labels, of course
+				% Label the 
+			initial_detections = classifyOneImage( classifyParams, featureDescriptors, out, parameters );
+			% Label image with the initial detections
+				% uncorrected_img = ;
+		else
+			% Use the raw image to manually select centers
+				uncorrected_img = raw_img;
+		end
+		% labelGUI();
+			% Get manually labelled image
+		% Save the manually labelled image
+		% Build a new kd-tree using all of the manually labelled images
+	end
+end

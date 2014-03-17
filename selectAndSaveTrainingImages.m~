@@ -1,0 +1,119 @@
+% function [] = selectAndSaveTrainingImages( local_parameters, calibration_classify_set )
+%
+% Loads parameters from text file and pass them to runDataset to execute.
+%
+% Parameters could define a single dataset, a set of datasets and/or a set of different parameters.
+%
+%   Arguments:
+%
+%     * [local_parameters] Filepath to file that defines the repository, data directory, results directory, and the running parameters
+%			* [calibration_classify_set] Path to the directory to sample training images from, example /datum/yieldest/datasets/petite_syrah/rows/row_100/cam0_images/
+%
+%   Returns:
+%
+%     * nothing
+% 
+%%
+
+function [] = selectAndSaveTrainingImages( local_parameters, calibration_classify_set )
+  %
+	% cd to the current repository as specified in local_parameters
+	% addpath() for all of the functions that will be used
+	% 
+
+  dataset_path = local_parameters.ROOT_DATA_DIR;
+
+  training_set_size = 10;
+
+  cur_classify_dataset_name = calibration_classify_set{1, 1}{1, 1};
+  cur_training_dataset_name = calibration_train_sets{1, 1}{1, 1};
+
+  path_results_generic_training = sprintf( '%s/training_generation_%s/', local_parameters.ROOT_RESULT_DIR, cur_classify_dataset_name );
+  classifying_dataset_path = sprintf( '%s/%s/', dataset_path, cur_classify_dataset_name);
+  classifying_training_path = sprintf( '%s/train/', classifying_dataset_path );
+  path_auto_gen_training = sprintf( '%s/auto_gen_from_%s', path_results_generic_training, cur_training_dataset_name );
+  path_auto_gen_training_raw = sprintf( '%s/raw/', path_auto_gen_training );
+  mkdir( path_auto_gen_training );
+  classifying_set_rows_path = sprintf( '%s/rows/', classifying_dataset_path);
+
+  pgm_already_existing = dir(sprintf( '%s/*.pgm', path_auto_gen_training_raw ));
+  jpg_already_existing = dir(sprintf( '%s/*.JPG', path_auto_gen_training_raw ));  
+  if size(pgm_already_existing, 1) > size(jpg_already_existing, 1)
+    images = pgm_already_existing;
+  else
+    images = jpg_already_existing;
+  end
+  images_already_made = size( images, 1 );
+	num_new_images = training_set_size - images_already_made;
+  classification_dataset_rows = dir([classifying_set_rows_path, 'row*']);
+  num_rows = size(classification_dataset_rows, 1);
+
+  train_set_created = struct([]);
+  count = 0;
+  for i = 1:num_new_images
+    valid_image = -1;
+    while valid_image == -1
+      count = count + 1;
+      if count > 100;
+        disp('All cam0_images.txt files are empty!?');
+        keyboard;
+      end
+      random_number = randi(num_rows,1,1);
+      row_name = classification_dataset_rows(random_number).name;
+      row_path = [ classifying_set_rows_path, row_name, '/' ];
+      images_txt_path = [row_path, 'cam0_images.txt'];
+      fid = fopen(images_txt_path, 'r');
+      image_paths = textscan(fid, '%s');
+      if numel(image_paths) < 1;
+        keyboard;
+        continue;
+      end
+      num_imgs = size(image_paths{1}, 1);
+      if num_imgs == 0
+        keyboard;
+        continue;
+      else
+        % Pick a random image
+        random_img_number = randi(num_imgs,1,1);
+        img_partial_path = image_paths{1}{random_img_number};
+        [~, cur_img_name, ext] = fileparts( img_partial_path );
+        img_full_path = sprintf( '%s/%s', row_path, img_partial_path );
+        if ~exist(img_full_path)
+          keyboard;
+          continue;
+        end
+        if size(train_set_created, 1) > 1
+          all_img_names_created = cell( size(train_set_created, 1) );
+          [all_img_names_created{:}] = deal( cur_img_name );
+          equal_names_created = cellfun( @strcmp, {train_set_created(:).name}, all_img_names_created );
+
+          all_img_names_already_completed = cell( size(images, 1) );
+          [all_img_names_already_completed{:}] = deal( cur_img_name );
+          equal_names_already_completed = cellfun( @strcmp, {images(:).name}, all_img_names_already_completed );
+          if (sum(equal_names_created(:)) > 1) || (sum(equal_names_already_completed(:)) > 1)
+            continue;
+          end
+        end
+        new_img_path = sprintf( '%s/%s%s', path_auto_gen_training_raw, cur_img_name, ext );
+        train_set_created(i).name = cur_img_name;
+        train_set_created(i).original_row_name = row_name;
+        train_set_created(i).original_path = img_full_path;
+        train_set_created(i).new_training_path = new_img_path;
+        valid_image = 1;
+      end
+    end
+  end
+	
+  fid_filepaths = fopen( sprintf('%s/filepaths.txt', path_auto_gen_training), 'w' );
+  mkdir( path_auto_gen_training_raw );
+  for i = 1:numel(train_set_created)
+    copyfile( train_set_created(i).original_path, train_set_created(i).new_training_path );
+    fprintf(fid_filepaths, 'Img: %d\tRow Name: %s\tImage Name: %s\n', i, train_set_created(i).original_row_name, train_set_created(i).name );
+  end
+  fclose(fid_filepaths);
+
+	% Save the actual images to a training set directory
+	
+	% Create a default parameters list to use
+	
+end
