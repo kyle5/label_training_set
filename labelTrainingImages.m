@@ -21,12 +21,18 @@ function labelTrainingImages( local_parameters, traindir_root, prior_dataset_dir
   %
   setupPaths( local_parameters );
   
-	all_training_images = dir( fullfile( [ traindir_root, 'raw/*.pgm' ] ) );
+	all_training_images = dir( fullfile( [ traindir_root, 'train/', 'raw/*.pgm' ] ) );
   training_dataset_name = '2013_06_17_Colony_Petite_Syrah';
   dataset_name = training_dataset_name;
   [parameters] = getParameters( local_parameters.ROOT_DATA_DIR, dataset_name );
   parameters.keypoint_detector_type = 'MAXIMAL';
   parameters.descriptor_type = 'FREAK';
+  
+  % 
+  uncorrected_img_dir = [traindir_root, 'train/', 'uncorrected_cent_red/'];
+  mkdir(uncorrected_img_dir);
+  labelled_img_dir = [traindir_root, 'train/', 'cent_red/'];
+  mkdir(labelled_img_dir);
   
   classifyParams = [];
 	% get the features from all of the training images?
@@ -82,7 +88,7 @@ function labelTrainingImages( local_parameters, traindir_root, prior_dataset_dir
 		% Obtain the current image
     trainingFeatures=struct([]);
     trainingFeatures(i).name = all_training_images(i).name;
-		imgfname = [traindir_root, 'raw/', trainingFeatures(i).name];
+		imgfname = [traindir_root, 'train/', 'raw/', trainingFeatures(i).name];
     raw_image = imread( imgfname );
     [ raw_image_rgb, runOnce, im_norm ] = preProcess( raw_image, runOnce, im_norm );
 
@@ -137,25 +143,58 @@ function labelTrainingImages( local_parameters, traindir_root, prior_dataset_dir
       classified_grapes = [];
     end
     
-    uncorrected_img_dir = [traindir_root, 'uncorrected_cent_red/'];
-    mkdir(uncorrected_img_dir);
     [p, n, e] = fileparts( all_training_images(i).name );
     
     uncorrected_img_path = [uncorrected_img_dir, n, '_uncorrected.png'];
     imwrite( uncorrected_img, uncorrected_img_path );
     
     % Get manually labelled image
-    labelled_img_dir = [traindir_root, 'labelled_cent_red/'];
-    mkdir(labelled_img_dir);
-    
     labelled_img_path = [ labelled_img_dir, n, '_cent_red.png' ];
     
     % Save the manually labelled image
       % Save in traindir_root for now
     %
-    [labelled_image] = labelGUI( raw_image_rgb, split_rows, split_columns, classified_grapes );
-    imwrite( labelled_image, labelled_img_path );
     
+    % Temporary: For testing: Only label images that have not yet been
+    % processed
+    if i > size( dir([labelled_img_dir, '*.png']), 1 )
+      [labelled_image] = labelGUI( raw_image_rgb, split_rows, split_columns, classified_grapes );
+      imwrite( labelled_image, labelled_img_path );
+    end
+    
+    close all;
+    figure, imshow( labelled_img_path );
+    keyboard;
     % Build a new kd-tree using all of the manually labelled images
-	end
+    
+    %% %% %% %% get the features from the new training images %% %% %% %%
+    trainingStructure_new_dataset = [];
+    %%%%%%
+    new_training_dataset_dir = [ traindir_root, '/train/' ];
+    %%If trainingFeatures passed into function then do not re-extract
+    [extracted_features_new_feature_set] = extractTrainingFeaturesAndLabels( new_training_dataset_dir, parameters );
+
+    trainingStructure_new_dataset.featuresAndLabels = extracted_features_new_feature_set;
+
+    %%concatenate all training feature descriptors and labels
+    trainingStructure_new_dataset.all_primFeatVals = horzcat(trainingStructure_new_dataset.featuresAndLabels.primFeatVal);
+    trainingStructure_new_dataset.all_othFeatVals = horzcat(trainingStructure_new_dataset.featuresAndLabels.othFeatVal);
+    trainingStructure_new_dataset.all_training_labels = vertcat(trainingStructure_new_dataset.featuresAndLabels.training_labels);
+    trainingStructure_new_dataset.LOO_kdForests = {};
+
+    %checks that there were no errors in training feature extraction
+    if(isempty(trainingStructure_new_dataset.all_primFeatVals)) && strcmp(parameters.descriptor_type, 'ONLY_COLOR') ~= 1
+      error_and_exit('There are no feature values extracted at training');
+    end
+    if(isempty(trainingStructure_new_dataset.all_training_labels))
+      error_and_exit('There are no training labels');
+    end
+    if(size(trainingStructure_new_dataset.all_primFeatVals,2) ~= size(trainingStructure_new_dataset.all_othFeatVals,2)) && strcmp(parameters.descriptor_type, 'ONLY_COLOR') ~= 1
+      error_and_exit('Not the same number of texture and color features');
+    end
+
+    %%build KD forest and setup the classification parameters
+    classifyParams = buildKDForest( trainingStructure_new_dataset.all_primFeatVals, trainingStructure_new_dataset.all_othFeatVals, trainingStructure_new_dataset.all_training_labels, parameters );
+    %%%%%%%
+  end
 end

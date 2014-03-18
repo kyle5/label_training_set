@@ -13,7 +13,12 @@
 %     * [labelled_image] A labelled image from the program
 
 function [labelled_image] = labelGUI( raw_image_rgb, split_rows, split_columns, all_pts )
+
   %
+  % Returns the final labelled image
+  radius = 8;
+  color_valid = [1, 0, 0];
+  
   % Split image into segments
   [image_height, image_width, ~] = size( raw_image_rgb );
   
@@ -34,25 +39,14 @@ function [labelled_image] = labelGUI( raw_image_rgb, split_rows, split_columns, 
       
       segment_width = image_x_delta;
       segment_height = image_y_delta;
+      [grape_boolean, all_pts] = mark_image_segment( raw_image_rgb, column_segment_start, row_segment_start, segment_width, segment_height, all_pts, grape_boolean );
       
-      i
-      j
-      row_segment_start
-      row_segment_end
-      column_segment_start
-      column_segment_end
-%       imshow(cur_image_segment)
-%       keyboard;
-      [grape_boolean, additional_grape_pts] = mark_image_segment( raw_image_rgb, column_segment_start, row_segment_start, segment_width, segment_height, all_pts, grape_boolean );
-      
-      all_pts = [all_pts, additional_grape_pts];
-      grape_boolean = [grape_boolean(:); true(size(additional_grape_pts, 2), 1)];
+      [labelled_image] = drawColoredDotsOntoImage( raw_image_rgb, all_pts(:, grape_boolean), radius, color_valid );
+      imshow(labelled_image)
+      keyboard;
     end
   end
   
-  % Returns the final labelled image
-  radius = 8;
-  color_valid = [1, 0, 0];
   % Draw valid as red
   [labelled_image] = drawColoredDotsOntoImage( raw_image_rgb, all_pts(:, grape_boolean), radius, color_valid );
 end

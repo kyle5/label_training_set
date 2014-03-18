@@ -9,7 +9,7 @@
 %   Returns:
 %
 %     * [cur_image_segment_marked] A labelled image patch returned from the program
-function [grape_boolean, additional_grape_pts] = mark_image_segment( raw_image_rgb, x_start, y_start, segment_width, segment_height, all_pts, grape_boolean )
+function [grape_boolean, all_pts] = mark_image_segment( raw_image_rgb, x_start, y_start, segment_width, segment_height, all_pts, grape_boolean )
   %
   additional_grape_pts = zeros(2, 0);
   
@@ -27,11 +27,11 @@ function [grape_boolean, additional_grape_pts] = mark_image_segment( raw_image_r
   valid_pts = pts_x > x_start & pts_x < ( x_start + segment_width ) & pts_y > y_start & pts_y < ( y_start + segment_height );
   valid_idx_global = find( valid_pts );
   cur_segment_pts_global = all_pts( :, valid_pts );
-  
+  additional_grape_global_idx_starting_idx = numel(valid_pts);
+  current_last_grape_global_idx = additional_grape_global_idx_starting_idx;
   binary_image = false( size(cur_image_segment, 1), size(cur_image_segment, 2) );
   f = figure;
-  set(f,'WindowButtonDownFcn',{@draw_to_binary_image,binary_image})
-  
+
   while 1
     imshow(cur_image_segment);
     drawnow
@@ -44,8 +44,21 @@ function [grape_boolean, additional_grape_pts] = mark_image_segment( raw_image_r
     global_y = y + y_start;
     
     if button == 1
-      additional_grape_pts = [additional_grape_pts, [global_x; global_y]];
-      [raw_image_rgb, cur_image_segment] = draw_points_and_segment( raw_image_rgb, x_min, x_max, y_min, y_max, [], [], additional_grape_pts );
+      new_pt = [global_x; global_y];
+%       additional_grape_pts = [additional_grape_pts, new_pt];
+      additional_grape_pts = zeros(2, 0);
+      % Add point to both local and global vectors that organize grape
+      % classifications and locations
+      cur_segment_pts_global = [cur_segment_pts_global, new_pt];
+      all_pts = [all_pts, new_pt];
+      grape_boolean = [ grape_boolean; true ];
+      
+      % Signify the global idx of the added point
+      new_idx = current_last_grape_global_idx + 1;
+      valid_idx_global = [valid_idx_global, new_idx];
+      current_last_grape_global_idx = new_idx;
+      
+      [raw_image_rgb, cur_image_segment] = draw_points_and_segment( raw_image_rgb, x_min, x_max, y_min, y_max, [new_pt], [true], additional_grape_pts );
     elseif button == 2
       break;
     elseif button == 3
@@ -61,32 +74,32 @@ function [grape_boolean, additional_grape_pts] = mark_image_segment( raw_image_r
         disp('There are no true grapes');
         continue;
       elseif isempty(min_val_1)
+        disp('elseif isempty(min_val_1)')
         min_ind = min_ind_2;
       elseif isempty(min_val_2)
+        disp('elseif isempty(min_val_2)')
         min_ind = min_ind_1;
       else
         if min_val_1 < min_val_2
+          disp('if min_val_1 < min_val_2')
           min_ind = min_ind_1;
         else
+          disp('~   if min_val_1 < min_val_2')
           min_ind = min_ind_2;
         end
       end
       
       min_global_ind = valid_idx_global( min_ind );
+      
       % Just color a single point to invalid
       single_pt = all_pts(:, min_global_ind);
-      grape_boolean(min_global_ind) = true;
+      grape_boolean(min_global_ind) = false;
       single_grape_boolean = [false];
+      
+      % Draw the entire image
       [raw_image_rgb, cur_image_segment] = draw_points_and_segment( raw_image_rgb, x_min, x_max, y_min, y_max, single_pt, single_grape_boolean, additional_grape_pts );
     end
   end
-end
-
-function draw_to_binary_image(hObject,~, binary_image)
-  figure, imshow(binary_image);
-  pos=get(hObject,'CurrentPoint');
-  disp(['You clicked X:',num2str(pos(1)),', Y:',num2str(pos(2))]);
-  binary_image(pos(1), pos(2)) = true;
 end
 
 function computeValidPoints(hObject,~, binary_image, all_pt_cords, valid_pts)
