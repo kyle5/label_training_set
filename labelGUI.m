@@ -12,37 +12,47 @@
 %
 %     * [labelled_image] A labelled image from the program
 
-function [labelled_image] = labelGUI( raw_image_rgb, split_rows, split_columns )
-  % 
+function [labelled_image] = labelGUI( raw_image_rgb, split_rows, split_columns, all_pts )
+  %
   % Split image into segments
-  [image_height, image_width] = size( raw_image_rgb );
+  [image_height, image_width, ~] = size( raw_image_rgb );
   
-  split_rows_markers = linspace( 1, image_height, split_rows );
-  split_columns_markers = linspace( 1, image_width, split_columns );
+  image_y_delta = floor( image_height / split_rows );
+  image_x_delta = floor( image_width / split_columns );
   
-  image_segments = cell( split_rows, split_columns );
-  image_segments_marked = cell( split_rows, split_columns );
+  split_rows_markers = round(linspace( 1, image_height, split_rows+1 ));
+  split_columns_markers = round(linspace( 1, image_width, split_columns+1 ));
+  
+  grape_boolean = true( size( all_pts, 2 ), 1 );
   for i = 1:split_rows
     for j = 1:split_columns
       row_segment_start = split_rows_markers(i);
       row_segment_end = split_rows_markers(i+1);
       
-      column_segment_start = split_columns_markers(i);
-      column_segment_end = split_columns_markers(i+1);
+      column_segment_start = split_columns_markers(j);
+      column_segment_end = split_columns_markers(j+1);
       
-      cur_image_segment = raw_image_rgb( row_segment_start:row_segment_end, column_segment_start:column_segment_end );
-
-      cur_image_segment_marked = mark_image_segment( cur_image_segment );
-
-      image_segments{i, j} = cur_image_segment;
-      image_segments_marked{i, j} = cur_image_segment_marked;
-      % Mark each image segment, while iterating through the function
+      segment_width = image_x_delta;
+      segment_height = image_y_delta;
+      
+      i
+      j
+      row_segment_start
+      row_segment_end
+      column_segment_start
+      column_segment_end
+%       imshow(cur_image_segment)
+%       keyboard;
+      [grape_boolean, additional_grape_pts] = mark_image_segment( raw_image_rgb, column_segment_start, row_segment_start, segment_width, segment_height, all_pts, grape_boolean );
+      
+      all_pts = [all_pts, additional_grape_pts];
+      grape_boolean = [grape_boolean(:); true(size(additional_grape_pts, 2), 1)];
     end
   end
   
-  % Reproduce the combined image
-  % For
-  
   % Returns the final labelled image
-  labelled_image = -1;
+  radius = 8;
+  color_valid = [1, 0, 0];
+  % Draw valid as red
+  [labelled_image] = drawColoredDotsOntoImage( raw_image_rgb, all_pts(:, grape_boolean), radius, color_valid );
 end
