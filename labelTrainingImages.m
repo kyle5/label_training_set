@@ -163,8 +163,6 @@ function labelTrainingImages( local_parameters, traindir_root, prior_dataset_dir
     end
     
     close all;
-    figure, imshow( labelled_img_path );
-    keyboard;
     % Build a new kd-tree using all of the manually labelled images
     
     %% %% %% %% get the features from the new training images %% %% %% %%
@@ -173,7 +171,7 @@ function labelTrainingImages( local_parameters, traindir_root, prior_dataset_dir
     new_training_dataset_dir = [ traindir_root, '/train/' ];
     %%If trainingFeatures passed into function then do not re-extract
     [extracted_features_new_feature_set] = extractTrainingFeaturesAndLabels( new_training_dataset_dir, parameters );
-
+    
     trainingStructure_new_dataset.featuresAndLabels = extracted_features_new_feature_set;
 
     %%concatenate all training feature descriptors and labels

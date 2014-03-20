@@ -1,0 +1,40 @@
+
+MATLAB version:
+
+Problems:
+Image callbacks are a pain
+
+Same as C version for group selection and single images
+	Local binary image keeps track of the points that are being currently selected
+		Only relative to the current segment
+	Points are relative to the entire space
+		New points get added onto a long list
+		False designations happen to the long list of "valid points"
+	Logical indexing finds points in the current area
+		As completed
+
+Draw on image
+	Points drawn on are colored white for the moment
+	Determine if a single point click or circle drawn around points
+		Point classifications change
+	Mouse callbacks reset on the image
+
+Tonight:
+	Mouse callbacks setup on the original image
+	Draw points to a binary image
+		Perhaps try to determine if single point or circled points tomorrow
+		Binary image will determine points tomorrow
+		Save the binary image to file for now
+	Keyboard presses signal segment is done
+	Keyboard presses signal to switch between positive/negative
+
+Ex:
+	Setup mouse-callback to draw binary image
+	Draw the binary image to file
+	Reset the mouse callbacks to draw binary image after the first click
+
+	Everything else tomorrow
+
+Keyboard calls signal:
+	Change between images
+
