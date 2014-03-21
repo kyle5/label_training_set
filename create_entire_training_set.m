@@ -18,10 +18,11 @@
 
 %%
 function create_entire_training_set()
+  close all;
   % Parameters for selectAndSaveTrainingImages()
   addpath(pwd);
   
-  repository_path = '/home/kyle/grape_code_primary/robocrop/matlab/src/';
+  repository_path = '/home/kyle/grape_code_git_update_maximal_temp/robocrop/matlab/src/';
   current_path = pwd;
   
   cd( repository_path );

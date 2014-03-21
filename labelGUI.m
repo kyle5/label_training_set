@@ -42,8 +42,6 @@ function [labelled_image] = labelGUI( raw_image_rgb, split_rows, split_columns, 
       [grape_boolean, all_pts] = mark_image_segment( raw_image_rgb, column_segment_start, row_segment_start, segment_width, segment_height, all_pts, grape_boolean );
       
       [labelled_image] = drawColoredDotsOntoImage( raw_image_rgb, all_pts(:, grape_boolean), radius, color_valid );
-      imshow(labelled_image)
-      keyboard;
     end
   end
   
